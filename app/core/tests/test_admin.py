@@ -11,7 +11,6 @@ class AdminSiteTests(TestCase):
 
     def setUp(self):
         """ Create user and client """
-
         self.client = Client()
         self.admin_user = get_user_model().objects.create_superuser(
             email='admin@example.com',
@@ -23,7 +22,6 @@ class AdminSiteTests(TestCase):
             email='user@example.com',
             password='test1234',
             name='Test User',
-            confirmed=False,
         )
 
     def test_users_lists(self):

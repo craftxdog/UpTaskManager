@@ -1,9 +1,13 @@
 """
 Test for models
 """
-
+from django.utils import timezone
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+
+from core.models import Token
+
+from uuid import UUID
 
 def create_user(email='test@exmaple.com', password='test1234'):
     """Create and return test user"""
@@ -16,6 +20,7 @@ class ModelTests(TestCase):
         """ Test creating a user with an email is successful """
         email = 'test@example.com'
         password = 'test-pass123'
+        password_confirmation = 'test-pass123'
         user = get_user_model().objects.create_user(
             email=email,
             password=password,
@@ -23,6 +28,7 @@ class ModelTests(TestCase):
 
         self.assertEqual(user.email, email)
         self.assertTrue(user.check_password(password))
+        self.assertFalse(user.confirmed)
 
     def test_new_user_email_normalized(self):
         """ Test email is normalized for new users """
@@ -55,6 +61,28 @@ class ModelTests(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+    def test_create_token_for_user(self):
+        """Test creating a token for a new user"""
+        user = create_user(
+            email='test@example.com',
+            password='test-1234',
+        )
+        token = Token.objects.create(user=user)
+        self.assertIsInstance(UUID(str(token.token)), UUID)
+        self.assertFalse(token.is_expired())
+
+    def test_token_expiration(self):
+        """Test token expiration"""
+        user = create_user(
+            email='test@example.com',
+            password='test-1234',
+        )
+        token = Token.objects.create(user=user)
+        token.expires_at = timezone.now() - timezone.timedelta(minutes=1)
+        token.save()
+        self.assertTrue(token.is_expired())
+
 
     # def test_create_project(self):
     #     """ Tests creating a project """
