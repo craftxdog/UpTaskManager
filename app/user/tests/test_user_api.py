@@ -1,15 +1,21 @@
 """
 Test User API endpoints
 """
+import uuid
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
 
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from core.models import Token
+
 CREATE_USER_URL = reverse('user:create-account')
+CONFIRM_USER_URL = reverse('user:confirm-account')
 CREATE_TOKEN_URL = reverse('user:create-token')
 PROFILE_URL = reverse('user:profile')
 
@@ -21,13 +27,14 @@ class PublicUserApiTests(TestCase):
     """Test the users API (public)"""
     def setUp(self):
         self.client = APIClient()
+
     def test_create_valid_user_success(self):
         """Test creating user with valid payload is successful."""
         payload = {
-            'email': 'user@example.com',
-            'password': '@user1234',
-            'password_confirmation': '@user1234',
-            'name': 'Test name'
+            'email': 'test@example.com',
+            'password': 'test-pass123',
+            'password_confirmation': 'test-pass123',
+            'name': 'Test Name',
         }
         res = self.client.post(CREATE_USER_URL, payload)
 
@@ -35,6 +42,32 @@ class PublicUserApiTests(TestCase):
         user = get_user_model().objects.get(email=payload['email'])
         self.assertTrue(user.check_password(payload['password']))
         self.assertNotIn('password', res.data)
+        token = Token.objects.filter(user=user).first()
+        self.assertIsNotNone(token)
+
+    def test_confirm_account_success(self):
+        """Test confirm account creation is successful."""
+        email = 'user@example.com'
+        password = 'user-pass1234'
+        user = create_user(email=email, password=password)
+        token = Token.objects.create(
+            token=str(uuid.uuid5(uuid.NAMESPACE_DNS, str(user.id))),
+            user=user,
+            expires_at=timezone.now() + timedelta(minutes=10)
+        )
+
+        payload = {'token': token.token}
+        res = self.client.post(CONFIRM_USER_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('token', res.data)
+        self.assertFalse(Token.objects.filter(token=token.token).exists())
+
+    def test_confirm_account_invalid_token(self):
+        """Test confirming account with an invalid token fails"""
+        data = {'token': 'invalid-token'}
+        res = self.client.post(CONFIRM_USER_URL, data)
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_user_exists(self):
         """Test creating a user that already exists fails."""
@@ -81,7 +114,7 @@ class PublicUserApiTests(TestCase):
             'name': 'Test Name',
             'email': 'testers@example.com',
             'password': 'test-user-password123',
-            'password_confirmation': 'test-user-password123'
+            'password_confirmation': 'test-user-password123',
         }
         user_details.pop('password_confirmation')
         create_user(**user_details)
@@ -148,7 +181,6 @@ class PrivateUserApiTests(TestCase):
             'id': int(self.user.id),
             'name': self.user.name,
             'email': self.user.email,
-            'confirmed': self.user.confirmed,
         })
 
     def test_post_me_not_allowed(self):

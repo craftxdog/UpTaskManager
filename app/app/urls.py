@@ -33,6 +33,7 @@ urlpatterns = [
     ),
 
     path('api/auth/', include('user.urls')),
+    path('api/project/', include('project.urls')),
 ]
 
 if settings.DEBUG:

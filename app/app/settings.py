@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'core',
     'user',
+    'project',
 ]
 
 MIDDLEWARE = [
@@ -140,6 +141,13 @@ REST_FRAMEWORK = {
     # ),
     # 'DEFAULT_PERMISSION_CLASSES': ('rest_framework_simplejwt.permissions.IsAuthenticated',),
 }
+# Looking to send emails in production? Check out our Email API/SMTP product!
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_HOST_USER = '8b47926b3450c9'
+EMAIL_HOST_PASSWORD = 'a73d2dc3d997ff'
+EMAIL_PORT = '2525'
+
 SIMPLE_JWT = {
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,

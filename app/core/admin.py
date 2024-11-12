@@ -48,5 +48,6 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.site.register(core_models.User, UserAdmin)
-# admin.site.register(models.Project)
-# admin.site.register(models.Task)
+admin.site.register(core_models.Project)
+admin.site.register(core_models.Task)
+# admin.site.register(core_models.Note)

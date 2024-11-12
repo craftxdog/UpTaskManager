@@ -1,26 +1,30 @@
 """
 Test for models
 """
+import uuid
+
 from django.utils import timezone
+from datetime import datetime, timedelta
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
-from core.models import Token
+from core.models import Project, Task, Note, TaskCompletion, Token
 
-from uuid import UUID
 
 def create_user(email='test@exmaple.com', password='test1234'):
     """Create and return test user"""
     return get_user_model().objects.create_user(email, password)
 
+def create_token(user):
+    """Create and return a token."""
+    return Token.objects.create(user=user, token='12345678')
+
 class ModelTests(TestCase):
     """ Test models """
-
     def test_create_user_with_email_successful(self):
         """ Test creating a user with an email is successful """
         email = 'test@example.com'
         password = 'test-pass123'
-        password_confirmation = 'test-pass123'
         user = get_user_model().objects.create_user(
             email=email,
             password=password,
@@ -29,6 +33,34 @@ class ModelTests(TestCase):
         self.assertEqual(user.email, email)
         self.assertTrue(user.check_password(password))
         self.assertFalse(user.confirmed)
+
+    def test_create_token_successful(self):
+        """Test creating a token for a user is successful."""
+        user = create_user()
+        token = Token.objects.create(
+            user=user
+        )
+
+        self.assertEqual(token.user, user)
+        expected_token = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(user.id)))
+        self.assertEqual(token.token, expected_token)
+        self.assertIsNotNone(token.created_at)
+        self.assertIsNotNone(token.expires_at)
+
+    def test_token_expiration(self):
+        """Test that token expires correctly."""
+        user = create_user()
+        expected_token = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(user.id)))
+        token = Token.objects.create(
+            token=expected_token,
+            user=user
+        )
+
+        """Set expiration date manually to simulate expiration"""
+        token.created_at = timezone.now() - timedelta(days=1)
+        token.save()
+
+        self.assertTrue(token.is_expired())
 
     def test_new_user_email_normalized(self):
         """ Test email is normalized for new users """
@@ -62,89 +94,71 @@ class ModelTests(TestCase):
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
 
-    def test_create_token_for_user(self):
-        """Test creating a token for a new user"""
-        user = create_user(
-            email='test@example.com',
-            password='test-1234',
+    def test_create_project(self):
+        """ Tests creating a project """
+        email = 'test@example.com'
+        password = 'test-pass123'
+        user = get_user_model().objects.create_user(
+            email=email,
+            password=password,
         )
-        token = Token.objects.create(user=user)
-        self.assertIsInstance(UUID(str(token.token)), UUID)
-        self.assertFalse(token.is_expired())
-
-    def test_token_expiration(self):
-        """Test token expiration"""
-        user = create_user(
-            email='test@example.com',
-            password='test-1234',
+        project = Project.objects.create(
+            manager=user,
+            title='Test Project',
+            client_name='Test Client Name',
+            description='Test Description',
         )
-        token = Token.objects.create(user=user)
-        token.expires_at = timezone.now() - timezone.timedelta(minutes=1)
-        token.save()
-        self.assertTrue(token.is_expired())
+        self.assertEqual(str(project), project.title)
 
+    def test_create_task(self):
+        """ Tests creating a task """
+        user = create_user()
+        task = Task.objects.create(
+            title='Test Task',
+            description='Test Description',
+            completed_by=user,
+        )
+        self.assertEqual(str(task), task.title)
 
-    # def test_create_project(self):
-    #     """ Tests creating a project """
-    #     user = get_user_model().objects.create_user(
-    #         'test@example.com',
-    #         'test123'
-    #     )
-    #     project = models.Project.objects.create(
-    #         project_name='Test Project',
-    #         client_name='Test Client Name',
-    #         description='Test Description',
-    #         user=user,
-    #     )
-    #     self.assertEqual(str(project), project.project_name)
-    #
-    # def test_create_task(self):
-    #     """ Tests creating a task """
-    #     user = create_user()
-    #     project = models.Project.objects.create(
-    #         project_name='Test Project',
-    #         client_name='Test Client',
-    #         description='Project Description',
-    #         user=user,
-    #     )
-    #     task = models.Task.objects.create(
-    #         name='Test Task',
-    #         description='Test Description',
-    #         project=project,
-    #         status=models.TaskStatus.PENDING,
-    #     )
-    #
-    #     self.assertEqual(str(task), task.name)
-    #     self.assertEqual(task.project, project)
-    #     self.assertEqual(task.status, models.TaskStatus.PENDING)
-    #
-    # def test_task_completion(self):
-    #     """ Tests creating a task completion entry """
-    #     user = create_user()
-    #     project = models.Project.objects.create(
-    #         project_name='Test Project',
-    #         client_name='Test Client',
-    #         description='Project Description',
-    #         user=user,
-    #     )
-    #     task = models.Task.objects.create(
-    #         name='Test Task',
-    #         description='Test Description',
-    #         project=project,
-    #         status=models.TaskStatus.IN_PROGRESS,
-    #     )
-    #
-    #     # Create TaskCompletion
-    #     task_completion = models.TaskCompletion.objects.create(
-    #         task=task,
-    #         user=user,
-    #         status=models.TaskStatus.COMPLETED,
-    #     )
-    #
-    #     self.assertEqual(task_completion.task, task)
-    #     self.assertEqual(task_completion.user, user)
-    #     self.assertEqual(task_completion.status, models.TaskStatus.COMPLETED)
-    #     self.assertIsNotNone(task_completion.completed_at)
-    #
     # def test_create_note(self):
     #     """ Tests creating a note """
+    #     email = 'test@example.com'
+    #     password = 'test-pass123'
+    #     user = get_user_model().objects.create_user(
+    #         email=email,
+    #         password=password,
+    #     )
+    #     task = Task.objects.create(
+    #         title='Test Task',
+    #         description='Test Description',
+    #         # project=Project.objects.create(
+    #         #     manager=user,
+    #         #     title='Test Project',
+    #         #     client_name='Test Client Name',
+    #         #     description='Test Description',
+    #         # )
+    #     )
+    #     note = Note.objects.create(
+    #         content='Test Note',
+    #         created_by=user,
+    #         task=task,
+    #     )
+    #     self.assertEqual(note.content, 'Test Note')
+    #     self.assertEqual(note.task, task)
+
+    def test_create_task_completed(self):
+        """ Tests creating a completed task """
+        user = create_user()
+        task = Task.objects.create(
+            title='Test Task',
+            description='Test Description',
+            completed_by=user,
+        )
+        completion = TaskCompletion.objects.create(
+            task=task,
+            user=user,
+            status='completed',
+        )
+        self.assertEqual(completion.status, 'completed')
+        self.assertEqual(completion.task, task)
+        self.assertEqual(completion.user, user)

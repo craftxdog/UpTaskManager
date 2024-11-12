@@ -10,6 +10,7 @@ app_name = 'user'
 
 urlpatterns = [
     path('create-account/', views.CreateUserView.as_view(), name='create-account'),
+    path('confirm-account/', views.ConfirmAccountView.as_view(), name='confirm-account'),
     path('create-token/', views.CreateTokenView.as_view(), name='create-token'),
     path('profile/', views.ManageUserView.as_view(), name='profile'),
 ]
