@@ -117,7 +117,9 @@ class PublicUserApiTests(TestCase):
             'password_confirmation': 'test-user-password123',
         }
         user_details.pop('password_confirmation')
-        create_user(**user_details)
+        user = create_user(**user_details)
+        user.confirmed = True
+        user.save()
 
         payload = {
             'email': user_details['email'],

@@ -118,29 +118,18 @@ class AuthTokenSerializer(serializers.Serializer):
         """Validate and authenticate the user."""
         email = attrs.get('email')
         password = attrs.get('password')
-        confirmed = attrs.get('confirmed')
 
         user = authenticate(
             request=self.context.get('request'),
             username=email,
             password=password,
         )
+        if not user:
+            msg = _('Unable to authenticate with provided credentials.')
+            raise serializers.ValidationError(msg, code='authorization')
         if not user.confirmed:
             msg = _('Unable to authenticate with provided credentials.')
             raise serializers.ValidationError(msg, code='authorization')
 
         attrs['user'] = user
         return attrs
-
-# class TokenConfirmSerializer(serializers.Serializer):
-#     """Serializer for confirming user account with a token."""
-#     token = serializers.UUIDField()
-#     def validate_token(self, value):
-#         """Validate that the token is valid and has not expired."""
-#         try:
-#             token_instance = Token.objects.get(token=value)
-#         except Token.DoesNotExist:
-#             raise serializers.ValidationError(_("Invalid token."))
-#         if token_instance.is_expired():
-#             raise serializers.ValidationError(_("Token has expired."))
-#         return value
