@@ -105,8 +105,7 @@ class BaseProjectAttrViewSet(mixins.DestroyModelMixin, mixins.UpdateModelMixin, 
             queryset = queryset.filter(project__isnull=False)
 
         return queryset.filter(
-            models.Q(project__manager=self.request.user) |
-            models.Q(completed_by=self.request.user)
+            models.Q(project__manager=self.request.user) | models.Q(completed_by=self.request.user)
         ).order_by('-title').distinct()
 
 
