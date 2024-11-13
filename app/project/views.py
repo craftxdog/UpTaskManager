@@ -14,7 +14,7 @@ from rest_framework import (
 )
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-
+from django.db import models
 from core.models import (
     Project,
     Task,
@@ -78,6 +78,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         """Create a new project."""
         serializer.save(manager=self.request.user)
 
+
 @extend_schema_view(
     list=extend_schema(
         parameters=[
@@ -89,17 +90,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
         ]
     )
 )
-
-class BaseProjectAttrViewSet(mixins.DestroyModelMixin,
-                            mixins.UpdateModelMixin,
-                            mixins.ListModelMixin,
-                            viewsets.GenericViewSet):
+class BaseProjectAttrViewSet(mixins.DestroyModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """Base view_set for project attributes."""
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Filter queryset to authenticated user."""
+        """Filtra el queryset al usuario autenticado o sus tareas."""
         assigned_only = bool(
             int(self.request.query_params.get('assigned_only', 0))
         )
@@ -108,8 +105,10 @@ class BaseProjectAttrViewSet(mixins.DestroyModelMixin,
             queryset = queryset.filter(project__isnull=False)
 
         return queryset.filter(
-            manager=self.request.user
-        ).order_by('-name').distinct()
+            models.Q(project__manager=self.request.user) |
+            models.Q(completed_by=self.request.user)
+        ).order_by('-title').distinct()
+
 
 class TaskViewSet(BaseProjectAttrViewSet):
     """Manage task in the database."""

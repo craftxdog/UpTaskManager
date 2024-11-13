@@ -9,16 +9,18 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import  User, Project, Task, TaskCompletion
+from core.models import Project, Task
 
 from project.serializers import ProjectSerializer, ProjectDetailSerializer
 
 
 PROJECT_URL = reverse('project:project-list')
 
+
 def detail_url(project_id):
     """Create and return a project detail URL."""
     return reverse('project:project-detail', args=[project_id])
+
 
 def create_project(manager, **params):
     """Create and return a sample user."""
@@ -28,13 +30,14 @@ def create_project(manager, **params):
         'client_name': 'Client name',
     }
     defaults.update(params)
-
     project = Project.objects.create(manager=manager, **defaults)
     return project
+
 
 def create_user(**params):
     """Create and return a new user."""
     return get_user_model().objects.create_user(**params)
+
 
 class PublicRecipeAPITests(TestCase):
     """Test unauthenticated API requests."""
@@ -46,6 +49,8 @@ class PublicRecipeAPITests(TestCase):
         res = self.client.get(PROJECT_URL)
 
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
 class PrivateRecipeApiTests(TestCase):
     """Test authenticated API requests."""
     def setUp(self):

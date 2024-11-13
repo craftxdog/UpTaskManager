@@ -4,20 +4,22 @@ Test for models
 import uuid
 
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
-from core.models import Project, Task, Note, TaskCompletion, Token
+from core.models import Project, Task, TaskCompletion, Token
 
 
 def create_user(email='test@exmaple.com', password='test1234'):
     """Create and return test user"""
     return get_user_model().objects.create_user(email, password)
 
+
 def create_token(user):
     """Create and return a token."""
     return Token.objects.create(user=user, token='12345678')
+
 
 class ModelTests(TestCase):
     """ Test models """
@@ -64,7 +66,6 @@ class ModelTests(TestCase):
 
     def test_new_user_email_normalized(self):
         """ Test email is normalized for new users """
-
         sample_emails = [
             ['test1@EXAMPLE.com', 'test1@example.com'],
             ['Test2@Example.com', 'Test2@example.com'],
@@ -75,7 +76,6 @@ class ModelTests(TestCase):
         for email, expected in sample_emails:
             user = get_user_model().objects.create_user(email, 'sample123')
             self.assertEqual(user.email, expected)
-
 
     def test_new_user_without_email_raises_error(self):
         """ Test that creating a user without an email raises a ValueError """
@@ -119,32 +119,6 @@ class ModelTests(TestCase):
             completed_by=user,
         )
         self.assertEqual(str(task), task.title)
-
-    # def test_create_note(self):
-    #     """ Tests creating a note """
-    #     email = 'test@example.com'
-    #     password = 'test-pass123'
-    #     user = get_user_model().objects.create_user(
-    #         email=email,
-    #         password=password,
-    #     )
-    #     task = Task.objects.create(
-    #         title='Test Task',
-    #         description='Test Description',
-    #         # project=Project.objects.create(
-    #         #     manager=user,
-    #         #     title='Test Project',
-    #         #     client_name='Test Client Name',
-    #         #     description='Test Description',
-    #         # )
-    #     )
-    #     note = Note.objects.create(
-    #         content='Test Note',
-    #         created_by=user,
-    #         task=task,
-    #     )
-    #     self.assertEqual(note.content, 'Test Note')
-    #     self.assertEqual(note.task, task)
 
     def test_create_task_completed(self):
         """ Tests creating a completed task """

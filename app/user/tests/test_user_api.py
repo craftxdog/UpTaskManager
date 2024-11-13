@@ -19,9 +19,11 @@ CONFIRM_USER_URL = reverse('user:confirm-account')
 CREATE_TOKEN_URL = reverse('user:create-token')
 PROFILE_URL = reverse('user:profile')
 
+
 def create_user(**params):
     """Create a user with the given parameters."""
     return get_user_model().objects.create_user(**params)
+
 
 class PublicUserApiTests(TestCase):
     """Test the users API (public)"""
@@ -159,8 +161,8 @@ class PublicUserApiTests(TestCase):
     def test_retrieve_user_unauthorized(self):
         """Test authentication is required for users."""
         res = self.client.get(PROFILE_URL)
-
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class PrivateUserApiTests(TestCase):
     """Test API requests that require authentication."""
@@ -201,59 +203,3 @@ class PrivateUserApiTests(TestCase):
         self.assertEqual(self.user.name, payload['name'])
         self.assertTrue(self.user.check_password(payload['password']))
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-
-
-
-    # def test_retrieve_user_unauthorized(self):
-    #     """Test authentication is required for users."""
-    #     res = self.client.get(ME_URL)
-    #
-    #     self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    # def test_confirm_account_with_valid_token(self):
-    #     """Test confirming a user's account with a valid token."""
-    #     user = create_user(
-    #         email='confirm@example.com',
-    #         password='@user1234',
-    #         name='Test User'
-    #     )
-    #     token = Token.objects.create(user=user)
-    #
-    #     payload = {
-    #         'token': str(token.token)
-    #     }
-    #
-    #     res = self.client.post(CONFIRM_USER_URL, payload)
-    #
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
-    #     user.refresh_from_db()
-    #     self.assertTrue(user.confirmed)
-    #
-    # def test_confirm_account_with_invalid_token(self):
-    #     """Test that confirming a user's account with an invalid token fails."""
-    #     payload = {
-    #         'token': 'invalid-token'
-    #     }
-    #
-    #     res = self.client.post(CONFIRM_USER_URL, payload)
-    #
-    #     self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-    #
-    # def test_confirm_account_with_expired_token(self):
-    #     """Test that confirming a user's account with an expired token fails."""
-    #     user = create_user(
-    #         email='expired@example.com',
-    #         password='@user1234',
-    #         name='Test User'
-    #     )
-    #     token = Token.objects.create(user=user)
-    #     token.expires_at = '2024-01-01T00:00:00Z'
-    #     token.save()
-    #
-    #     payload = {
-    #         'token': str(token.token)
-    #     }
-    #
-    #     res = self.client.post(CONFIRM_USER_URL, payload)
-    #
-    #     self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

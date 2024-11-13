@@ -17,9 +17,11 @@ from rest_framework.fields import empty
 
 User = get_user_model()
 
+
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for the User model"""
     password_confirmation = serializers.CharField(write_only=True, style={'input_type': 'password'})
+
     class Meta:
         model = User
         fields = ('id', 'email', 'name', 'password', 'password_confirmation')
@@ -27,6 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
             'password': {'write_only': True, 'min_length': 8},
             'password_confirmation': {'write_only': True},
         }
+
     def validate(self, data):
         """Validate that password and password_confirmation match."""
         password = data.get('password')
@@ -82,6 +85,7 @@ class UserSerializer(serializers.ModelSerializer):
             user.save()
         return user
 
+
 class ConfirmAccountSerializer(serializers.Serializer):
     """Serializer for the Confirm Account model"""
     token = serializers.CharField()
@@ -89,6 +93,7 @@ class ConfirmAccountSerializer(serializers.Serializer):
     def __init__(self, instance=None, data=empty, **kwargs):
         super().__init__(instance, data, **kwargs)
         self.token_instance = None
+
     def validate(self, attrs):
         """Validate that token is valid."""
         token_value = attrs.get('token')
@@ -105,6 +110,7 @@ class ConfirmAccountSerializer(serializers.Serializer):
         user.save()
         self.token_instance.delete()
         return user
+
 
 class AuthTokenSerializer(serializers.Serializer):
     """Serializer for the user auth token."""

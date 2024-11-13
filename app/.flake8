@@ -4,3 +4,19 @@ exclude =
   __pycache__,
   manage.py,
   settings.py
+
+max-line-length = 120
+
+ignore =
+  E203,
+  E266,
+  E501,
+  W503,
+
+max-complexity = 10
+show-source = True
+docstring-convention = google
+
+
+ per-file-ignores =
+  */migrations/*: F401

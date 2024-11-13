@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from user.serializers import UserSerializer, AuthTokenSerializer, ConfirmAccountSerializer
 
+
 class CreateUserView(generics.CreateAPIView):
     """Create a new user in the system"""
     serializer_class = UserSerializer
@@ -23,6 +24,7 @@ class CreateUserView(generics.CreateAPIView):
                             status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ConfirmAccountView(generics.GenericAPIView):
     """Confirm the user's account using a token."""
     serializer_class = ConfirmAccountSerializer
@@ -34,6 +36,7 @@ class ConfirmAccountView(generics.GenericAPIView):
         user = serializer.save()
         auth_token, created = AuthToken.objects.get_or_create(user=user)
         return Response({'message': 'Your account was successful confirmed', 'token': auth_token.key}, status=status.HTTP_200_OK)
+
 
 class CreateTokenView(ObtainAuthToken):
     """Create a new auth token for user."""

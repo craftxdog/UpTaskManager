@@ -8,16 +8,19 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
 
+
 class UserManager(BaseUserManager):
     """ Manager for users """
 
     def create_user(self, email, password=None, **extra_fields):
         """ Create, save and return a new user """
+
         if not email:
-            raise ValueError('User must have an email address.')
+            raise ValueError(
+                'User must have an email address.'
+            )
 
         email = self.normalize_email(email)
-
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -26,13 +29,13 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, email, password):
         """ Create and return a new superuser """
-
         user = self.create_user(email, password)
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
 
         return user
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     """ User in the system """
@@ -50,6 +53,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class Token(models.Model):
     """Token for confirm account"""
+
     token = models.CharField(max_length=255, unique=True, null=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -66,10 +70,12 @@ class Token(models.Model):
 
     def is_expired(self):
         return timezone.now() >= self.expires_at
+
     class Meta:
         indexes = [
             models.Index(fields=['expires_at']),
         ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__original_created_at = self.created_at
@@ -77,6 +83,7 @@ class Token(models.Model):
 
 class Project(models.Model):
     """ Project model """
+
     manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -90,8 +97,10 @@ class Project(models.Model):
         related_name='team_projects',
         blank=True
     )
+
     def __str__(self):
         return self.title
+
 
 class TaskStatus(models.TextChoices):
     PENDING = 'pending', 'Pending'
@@ -99,6 +108,7 @@ class TaskStatus(models.TextChoices):
     IN_PROGRESS = 'inProgress', 'In Progress'
     UNDER_REVIEW = 'underReview', 'Under Review'
     COMPLETED = 'completed', 'Completed'
+
 
 class Task(models.Model):
     """ Task model """
@@ -109,11 +119,11 @@ class Task(models.Model):
         choices=TaskStatus.choices,
         default=TaskStatus.PENDING
     )
-    completed_by =models.ForeignKey(
+    completed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
     )
-    # notes_list = models.ManyToManyField('Note', related_name='tasks', blank=True)
+
     def __str__(self):
         return self.title
 
@@ -127,6 +137,7 @@ class Note(models.Model):
         related_name='notes'
     )
     task = models.ForeignKey('Task', on_delete=models.CASCADE, related_name='note_task')
+
     def __str__(self):
         return f'Note by {self.created_by} on {self.task}: {self.content}'
 

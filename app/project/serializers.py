@@ -4,18 +4,22 @@ Serializer modules API
 from django.db.models import Manager
 from rest_framework import serializers
 
-from core.models import  User, Project, Task, TaskCompletion
+from core.models import Project, Task, TaskCompletion
+
 
 class TaskSerializer(serializers.ModelSerializer):
     """Task serializer"""
+
     class Meta:
         model = Task
         fields = ['id', 'title', 'description', 'status']
         read_only_fields = ['id']
 
+
 class ProjectSerializer(serializers.ModelSerializer):
     """Serializer class for Project model"""
     tasks = TaskSerializer(many=True, required=False)
+
     class Meta:
         model = Project
         fields = ['id', 'title', 'client_name', 'description', 'manager', 'tasks']
@@ -59,15 +63,19 @@ class ProjectSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class ProjectDetailSerializer(ProjectSerializer):
     """Serializer for recipe detail view."""
+
     class Meta(ProjectSerializer.Meta):
         fields = ProjectSerializer.Meta.fields + ['description']
+
 
 class TaskCompletionSerializer(serializers.ModelSerializer):
     """Task completion serializer"""
     task = TaskSerializer(read_only=True)
     user = serializers.StringRelatedField(read_only=True)
+
     class Meta:
         model = TaskCompletion
         fields = ['id', 'task', 'user', 'status', 'completed_at']
